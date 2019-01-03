@@ -16,9 +16,9 @@ import logging
 # localization
 VLM_PORT = '4212'
 VLM_HOST = '127.0.0.1'
-VLM_PASSWD = '1234abcd'
+VLM_PASSWD = 'admin'
 NAME = "shows"  # of broadcast element to control
-SHOWS_DIR = '/home/public/videos/shows/'
+SHOWS_DIR = os.path.join(os.path.expanduser("~"), 'Videos')
 MY_NAME = 'cna-video'
 
 # tuning params
