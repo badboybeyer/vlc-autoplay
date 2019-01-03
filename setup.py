@@ -3,6 +3,7 @@ try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
+from os import path
 
 if sys.version_info[:2] < (3, 6):
     msg = ("VLM Feed requires Python 3.6 or later. "
