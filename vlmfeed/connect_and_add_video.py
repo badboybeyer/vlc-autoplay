@@ -12,13 +12,14 @@ import os
 import random
 import magic
 import logging
+from pathlib import Path
 
 # localization
 VLM_PORT = '4212'
 VLM_HOST = '127.0.0.1'
 VLM_PASSWD = 'admin'
 NAME = "shows"  # of broadcast element to control
-SHOWS_DIR = os.path.join(os.path.expanduser("~"), 'Videos')
+SHOWS_DIR = os.path.join(Path.home(), 'Videos')
 MY_NAME = 'cna-video'
 
 # tuning params
