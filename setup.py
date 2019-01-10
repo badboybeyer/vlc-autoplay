@@ -33,7 +33,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='vlc-autoplay',
-      version='0.1a',
+      version='0.1b',
       description='Add media from a library rando-magically to a VLC playlist using the RC or telnet interface',
       long_description=long_description,
       long_description_content_type='text/markdown',      
@@ -44,13 +44,13 @@ setup(name='vlc-autoplay',
       maintainer='Erich Beyer',
       maintainer_email='erich@beyerautomation.com',
       classifiers=CLASSIFIERS,
-      packages=['vlc-autoplay'],
+      packages=['vlc_autoplay'],
       install_requires=[
           'python-magic',
       ],      
       entry_points={
           'console_scripts': [
-              'connect_and_add_media=vlc-autoplay.connect_and_add_media:main',
+              'connect_and_add_media=vlc_autoplay.connect_and_add_media:main',
           ]
       },      
       project_urls={
