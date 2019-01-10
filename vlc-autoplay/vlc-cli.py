@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-The VLM class represents a telnet connection to the VLC VLM.
+The vlc-cli class represents a telnet connection to the VLC console.
 The class contains helper functions to extend the telnetlib functionality.
 """
 
@@ -9,16 +9,16 @@ from .constants import MY_NAME, DEBUG
 # tuning params
 TELNET_LINE_POLL_INTERVAL_SEC = 0.01
 
-# thinks i think i know about the VLM interface
+# thinks i think i know about the console interface
 PROMPT = '> '
-# TODO: validate character encoding of VLM interface
+# TODO: validate character encoding of console interface
 ENCODING = 'utf8'
 # TODO - parse login header
 LOGIN_HEADER_EXAMPLE = 'VLC media player 3.0.5 Vetinari\n'
 
 logger = logging.getLogger(MY_NAME)
 
-class VLM(telnetlib.Telnet):
+class VLCCLI(telnetlib.Telnet):
     def write_line(self, line):
         if DEBUG:
             logger.debug(f"out: '{line}'")
@@ -113,4 +113,4 @@ class VLM(telnetlib.Telnet):
 
     def close(self):
         self.write_line(f'logout')
-        return super(VLM, self).close()
+        return super(VLCCLI, self).close()

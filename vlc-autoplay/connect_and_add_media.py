@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-connect via telent to a VLC VLM interface
+connect via telent to a VLC console interface
 check if a media source has a queue of media and is playing
 add media sources from a dump if the queue is short
 play using the media source if it is stopped
@@ -13,13 +13,13 @@ import random
 import magic
 import logging
 from pathlib import Path
-from .vlm import VLM
+from .vlc-cli import VLCCLI
 from .constants import MY_NAME, DEBUG
 
 # localization
-VLM_PORT = '4212'
-VLM_HOST = '127.0.0.1'
-VLM_PASSWD = 'admin'
+CONSOLE_PORT = '4212'
+CONSOLE_HOST = '127.0.0.1'
+CONSOLE_PASSWD = 'admin'
 NAME = "shows"  # of broadcast element to control
 SHOWS_DIR = os.path.join(Path.home(), 'Videos')
 
@@ -33,10 +33,10 @@ def main():
     import argparse
     from sys import stdout    
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-H', '--host', help='hostname for VLM', default=VLM_HOST)
-    parser.add_argument('-p', '--port', type=int, help='port number for VLM', default=VLM_PORT)
-    parser.add_argument('-P', '--password', help='login password for VLM', default=VLM_PASSWD)
-    parser.add_argument('-n', '--name', help='name of media source to use in VLM', default=NAME)
+    parser.add_argument('-H', '--host', help='hostname for VLC console', default=CONSOLE_HOST)
+    parser.add_argument('-p', '--port', type=int, help='port number for VLC console', default=CONSOLE_PORT)
+    parser.add_argument('-P', '--password', help='login password for VLC console', default=CONSOLE_PASSWD)
+    parser.add_argument('-n', '--name', help='name of media source to use in VLC console', default=NAME)
     parser.add_argument('-d', '--dump', help='path to search for new videos in', default=SHOWS_DIR)
     parser.add_argument('-v', '--verbose', action='count',
                         help='verbose operation')
@@ -57,7 +57,7 @@ def main():
                      showsdir=args.dump)
     return
 
-def connect_and_play(host=VLM_HOST, port=VLM_PORT, password=VLM_PASSWD,
+def connect_and_play(host=CONSOLE_HOST, port=CONSOLE_PORT, password=CONSOLE_PASSWD,
                      name=NAME, showsdir=SHOWS_DIR):
     handle = connect(host=host, port=port, password=password)
     # TODO: handle/escape characters in file name
@@ -69,8 +69,8 @@ def connect_and_play(host=VLM_HOST, port=VLM_PORT, password=VLM_PASSWD,
 
 
 def connect(host, port, password):
-    logger.info(f'Connecting to VLM on {host}:{port}')
-    handle = VLM(host=host, port=port)
+    logger.info(f'Connecting to VLC console on {host}:{port}')
+    handle = VLCCLI(host=host, port=port)
     handle.read_until_line('Password: ', timeout=TELNET_TIMEOUT_SEC)
     handle.write_line(password)
     handle.read_until_line(PROMPT, timeout=TELNET_TIMEOUT_SEC)
