@@ -1,0 +1,3 @@
+it looks like I can querry the imdb database with https://imdbpy.sourceforge.io/ecosystem.html
+it looks like I can querry the tvdb database with https://github.com/dbr/tvdb_api/tree/master
+the sickbeard.db sqlite3 database may be a good place to search for shows in.
