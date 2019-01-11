@@ -16,7 +16,6 @@ from .constants import MY_NAME, DEBUG, TELNET_TIMEOUT_SEC, PROMPT
 CONSOLE_PORT = '4212'
 CONSOLE_HOST = '127.0.0.1'
 CONSOLE_PASSWD = 'admin'
-NAME = "shows"  # of broadcast element to control
 SHOWS_DIR = os.path.join(Path.home(), 'Videos')
 
 # tuning params
@@ -35,8 +34,6 @@ def main():
                         help='port number for VLC console'),
     parser.add_argument('-P', '--password', default=CONSOLE_PASSWD,
                         help='login password for VLC console')
-    parser.add_argument('-n', '--name', default=NAME,
-                        help='name of media source to use in VLC console')
     parser.add_argument('-d', '--dump', default=SHOWS_DIR,
                         help='path to search for new videos in')
     parser.add_argument('-v', '--verbose', action='count',
@@ -55,16 +52,16 @@ def main():
         raise RuntimeError(msg.format(args.verbose))
     initLogger(logger, args.logfile, verbosity)
     connect_and_play(host=args.host, port=args.port, password=args.password,
-                     name=args.name, showsdir=args.dump)
+                     showsdir=args.dump)
     return
 
 
 def connect_and_play(host=CONSOLE_HOST, port=CONSOLE_PORT,
-                     password=CONSOLE_PASSWD, name=NAME, showsdir=SHOWS_DIR):
+                     password=CONSOLE_PASSWD, showsdir=SHOWS_DIR):
     handle = connect(host=host, port=port, password=password)
     # TODO: handle/escape characters in file name
-    handle.add_videos_if_queue_short(TOO_FEW_VIDEOS_IN_QUEUE, name, showsdir)
-    handle.play(name)
+    handle.add_videos_if_queue_short(TOO_FEW_VIDEOS_IN_QUEUE, showsdir)
+    handle.play()
     if not DEBUG:
         handle.close()
     return handle
