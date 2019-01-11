@@ -13,7 +13,7 @@ import random
 import magic
 import logging
 from pathlib import Path
-from .vlc-cli import VLCCLI
+from .vlc_cli import VLCCLI
 from .constants import MY_NAME, DEBUG
 
 # localization
