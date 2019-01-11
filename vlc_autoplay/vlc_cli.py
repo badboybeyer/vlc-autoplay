@@ -22,9 +22,12 @@ LOGIN_HEADER_EXAMPLE = 'VLC media player 3.0.5 Vetinari\n'
 
 logger = logging.getLogger(MY_NAME)
 
-playlist_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - (?P<title>.+)'
-                         r' \((?P<duration>[0-9]{2}:[0-9]{2}:[0-9]{2})\)'
-                         r'($| \[played (?P<played>[0-9]+) times?\]$)')
+# this re is a bit too brittle and doing more than it needs, simplifying:
+# playlist_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - (?P<title>.+)'
+#                          r'( \((?P<duration>[0-9]{2}:[0-9]{2}:[0-9]{2})\)|)'
+#                          r'( \[played (?P<played>[0-9]+) times?\]$|)')
+playlist_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - .+'
+                         r'( \[played (?P<played>[0-9]+) times?\]|$)')
 
 
 class VLCCLI(telnetlib.Telnet):
@@ -38,7 +41,7 @@ class VLCCLI(telnetlib.Telnet):
     def read_line(self, eol='\n', timeout=None):
         buf = self.read_until(eol.encode(ENCODING), timeout).decode(ENCODING)
         if DEBUG:
-            logger.debug(f"in : '{buf}'")
+            logger.debug(f"in : '{buf.rstrip()}'")
         return buf
 
     def read_until_line(self, expected, eol='\n', timeout=None):
@@ -86,7 +89,7 @@ class VLCCLI(telnetlib.Telnet):
             elif line_state('| 1 - Playlist', 'begin'):
                 state = 'playlist'
             elif line_state("|  ", 'playlist'):
-                match = playlist_re.search(line)
+                match = playlist_re.search(line.strip())
                 if isinstance(match, type(None)):
                     raise RuntimeError(f'Failed to parse playlist entry: '
                                        f'"{line.strip()}"')
