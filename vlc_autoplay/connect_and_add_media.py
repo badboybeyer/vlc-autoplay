@@ -19,7 +19,7 @@ CONSOLE_PASSWD = 'admin'
 SHOWS_DIR = os.path.join(Path.home(), 'Videos')
 
 # tuning params
-TOO_FEW_VIDEOS_IN_QUEUE = 2
+TOO_FEW_MEDIAS_IN_QUEUE = 2
 
 logger = logging.getLogger(MY_NAME)
 
@@ -35,7 +35,11 @@ def main():
     parser.add_argument('-P', '--password', default=CONSOLE_PASSWD,
                         help='login password for VLC console')
     parser.add_argument('-d', '--dump', default=SHOWS_DIR,
-                        help='path to search for new videos in')
+                        help='path to search for new medias in')
+    parser.add_argument('-m', '--min', type=int,
+                        default=TOO_FEW_MEDIAS_IN_QUEUE,
+                        help='minimum number of media files in queue and not '
+                        'playing')
     parser.add_argument('-v', '--verbose', action='count',
                         help='verbose operation')
     parser.add_argument('-l', '--logfile', type=argparse.FileType('a'),
@@ -57,10 +61,11 @@ def main():
 
 
 def connect_and_play(host=CONSOLE_HOST, port=CONSOLE_PORT,
-                     password=CONSOLE_PASSWD, showsdir=SHOWS_DIR):
+                     password=CONSOLE_PASSWD, showsdir=SHOWS_DIR,
+                     minqueue=TOO_FEW_MEDIAS_IN_QUEUE):
     handle = connect(host=host, port=port, password=password)
     # TODO: handle/escape characters in file name
-    handle.add_videos_if_queue_short(TOO_FEW_VIDEOS_IN_QUEUE, showsdir)
+    handle.add_medias_if_queue_short(minqueue, showsdir)
     handle.play()
     if not DEBUG:
         handle.close()

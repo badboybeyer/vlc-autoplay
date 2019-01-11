@@ -9,7 +9,7 @@ import logging
 import re
 import telnetlib
 from .constants import MY_NAME, DEBUG, TELNET_TIMEOUT_SEC, PROMPT
-from .selector import get_random_show
+from .selector import get_random_media
 
 # tuning params
 TELNET_LINE_POLL_INTERVAL_SEC = 0.01
@@ -115,12 +115,12 @@ class VLCCLI(telnetlib.Telnet):
         logger.info(f'{result:d} tracks in queue and unplayed')
         return result
 
-    def add_videos_if_queue_short(self, minqueuelen, showsdir):
-        if self.left_to_play() < minqueuelen:
-            videopath = get_random_show(showsdir)
-            logger.info(f'Adding "{videopath}" queue')
-            # TODO: we may need to quote some characters in the videopath
-            self.write_line(f'enqueue file://{videopath}')
+    def add_medias_if_queue_short(self, minqueuelen, mediadir):
+        while self.left_to_play() < minqueuelen:
+            mediapath = get_random_media(mediadir)
+            logger.info(f'Adding "{mediapath}" queue')
+            # TODO: we may need to quote some characters in the mediapath
+            self.write_line(f'enqueue file://{mediapath}')
             self.read_until_line(PROMPT, timeout=TELNET_TIMEOUT_SEC)
         return
 
