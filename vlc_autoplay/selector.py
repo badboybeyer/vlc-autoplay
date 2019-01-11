@@ -28,7 +28,7 @@ def get_random_media(mediadir, mediatypes=ALL_MEDIA):
     fails = 0
     while fails < MAX_DESCENT_FAILURES:
         result = random.choice(mediapaths)
-        if result.is_dir:
+        if result.is_dir():
             try:
                 result = get_random_media(result.path)
             except RuntimeError:
