@@ -37,8 +37,9 @@ def get_random_media(mediadir, mediatypes=ALL_MEDIA):
             else:
                 break
         else:
+            result = result.path
             break
     if isinstance(result, type(None)):
         raise RuntimeError(f'Exceded max retries why searching for media in '
                            f'subdirs of "{mediadir}"')
-    return result.path
+    return result
