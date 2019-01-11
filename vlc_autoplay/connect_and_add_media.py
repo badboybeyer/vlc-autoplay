@@ -10,7 +10,8 @@ import os
 import logging
 from pathlib import Path
 from .vlc_cli import VLCCLI
-from .constants import MY_NAME, DEBUG, TELNET_TIMEOUT_SEC, PROMPT
+from .constants import MY_NAME, DEBUG, TELNET_TIMEOUT_SEC, PROMPT, \
+    ALL_MEDIA, VIDEO_MEDIA
 
 # localization
 CONSOLE_PORT = '4212'
@@ -44,6 +45,8 @@ def main():
                         help='verbose operation')
     parser.add_argument('-l', '--logfile', type=argparse.FileType('a'),
                         default=stdout, help='log file')
+    parser.add_argument('-A', '--all', action='store_true',
+                        help='add all media - default is to only add videos')
     args = parser.parse_args()
     if isinstance(args.verbose, type(None)):
         verbosity = logging.WARNING
@@ -54,18 +57,23 @@ def main():
     else:
         msg = 'Unsupported number of verbose flags "{}"'
         raise RuntimeError(msg.format(args.verbose))
+    if args.all:
+        mediatypes = ALL_MEDIA
+    else:
+        mediatypes = VIDEO_MEDIA
     initLogger(logger, args.logfile, verbosity)
     connect_and_play(host=args.host, port=args.port, password=args.password,
-                     showsdir=args.dump, minqueue=args.min)
+                     showsdir=args.dump, minqueue=args.min,
+                     mediatypes=mediatypes)
     return
 
 
 def connect_and_play(host=CONSOLE_HOST, port=CONSOLE_PORT,
                      password=CONSOLE_PASSWD, showsdir=SHOWS_DIR,
-                     minqueue=TOO_FEW_MEDIAS_IN_QUEUE):
+                     minqueue=TOO_FEW_MEDIAS_IN_QUEUE, mediatypes=VIDEO_MEDIA):
     handle = connect(host=host, port=port, password=password)
     # TODO: handle/escape characters in file name
-    handle.add_medias_if_queue_short(minqueue, showsdir)
+    handle.add_medias_if_queue_short(minqueue, showsdir, mediatypes)
     handle.play()
     if not DEBUG:
         handle.close()

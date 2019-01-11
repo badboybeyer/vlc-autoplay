@@ -6,14 +6,13 @@ import logging
 import os
 import random
 import magic
-from .constants import MY_NAME
+from .constants import MY_NAME, VIDEO_MEDIA
 
 logger = logging.getLogger(MY_NAME)
 MAX_DESCENT_FAILURES = 5
-ALL_MEDIA = ('video', 'image', 'audio')
 
 
-def get_random_media(mediadir, mediatypes=ALL_MEDIA):
+def get_random_media(mediadir, mediatypes=VIDEO_MEDIA):
     logger.info(f'Finding a random media file in "{mediadir}"')
     mediapaths = list()
     for entry in os.scandir(mediadir):

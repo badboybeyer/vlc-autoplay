@@ -129,9 +129,9 @@ class VLCCLI(telnetlib.Telnet):
         logger.info(f'{result:d} tracks in queue and unplayed')
         return result
 
-    def add_medias_if_queue_short(self, minqueuelen, mediadir):
+    def add_medias_if_queue_short(self, minqueuelen, mediadir, mediatypes):
         while self.left_to_play() < minqueuelen:
-            mediapath = get_random_media(mediadir)
+            mediapath = get_random_media(mediadir, mediatypes)
             logger.info(f'Adding "{mediapath}" queue')
             # TODO: we may need to quote some characters in the mediapath
             self.write_line(f'enqueue file://{mediapath}')
