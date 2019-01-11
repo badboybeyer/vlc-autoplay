@@ -33,7 +33,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='vlc-autoplay',
-      version='0.1b',
+      version='0.1c',
       description='Add media from a library rando-magically to a VLC playlist using the RC or telnet interface',
       long_description=long_description,
       long_description_content_type='text/markdown',      
