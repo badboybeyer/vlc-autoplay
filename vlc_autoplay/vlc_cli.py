@@ -86,7 +86,11 @@ class VLCCLI(telnetlib.Telnet):
             elif line_state('| 1 - Playlist', 'begin'):
                 state = 'playlist'
             elif line_state("|  ", 'playlist'):
-                d = playlist_re.search(line).groupdict()
+                match = playlist_re.search(line)
+                if isinstance(match, type(None)):
+                    raise RuntimeError(f'Failed to parse playlist entry: '
+                                       f'"{line.strip()}"')
+                d = match.groupdict()
                 d['playing'] = d['playing'] == '*'
                 result.append(d)
             elif line_state('| 2 - Media Library', 'playlist'):
