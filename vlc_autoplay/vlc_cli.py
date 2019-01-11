@@ -22,12 +22,9 @@ LOGIN_HEADER_EXAMPLE = 'VLC media player 3.0.5 Vetinari\n'
 
 logger = logging.getLogger(MY_NAME)
 
-# this re is a bit too brittle and doing more than it needs, simplifying:
-# playlist_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - (?P<title>.+)'
-#                          r'( \((?P<duration>[0-9]{2}:[0-9]{2}:[0-9]{2})\)|)'
-#                          r'( \[played (?P<played>[0-9]+) times?\]$|)')
-playlist_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - .+'
-                         r'( \[played (?P<played>[0-9]+) times?\]|$)')
+begin_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - .+')
+end_re = re.compile(r' \((?P<duration>[0-9]{2}:[0-9]{2}:[0-9]{2})\)'
+                    r'( \[played (?P<played>[0-9]+) times?\]$|$)')
 
 
 class VLCCLI(telnetlib.Telnet):
@@ -89,11 +86,18 @@ class VLCCLI(telnetlib.Telnet):
             elif line_state('| 1 - Playlist', 'begin'):
                 state = 'playlist'
             elif line_state("|  ", 'playlist'):
-                match = playlist_re.search(line.strip())
+                match = begin_re.search(line.strip())
                 if isinstance(match, type(None)):
                     raise RuntimeError(f'Failed to parse playlist entry: '
                                        f'"{line.strip()}"')
-                d = match.groupdict()
+                d = match.groupdict()n
+                match = end_re.search(line.strip())
+                if isinstance(match, type(None)):
+                    d['duration'] =  None
+                    d['played'] = None
+                else:
+                    d['duration'] = match.groupdict()['duration']
+                    d['played'] = match.groupdict()['played']
                 d['playing'] = d['playing'] == '*'
                 result.append(d)
             elif line_state('| 2 - Media Library', 'playlist'):
