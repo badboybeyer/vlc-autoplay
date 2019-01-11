@@ -18,6 +18,8 @@ LOGIN_HEADER_EXAMPLE = 'VLC media player 3.0.5 Vetinari\n'
 
 logger = logging.getLogger(MY_NAME)
 
+playlist_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - (?P<title>.+) \((?P<duration>[0-9]{2}:[0-9]{2}:[0-9]{2})\)($| \[played (?P<played>[0-9]+) times?\]$)')
+
 class VLCCLI(telnetlib.Telnet):
     def write_line(self, line):
         if DEBUG:
@@ -44,70 +46,76 @@ class VLCCLI(telnetlib.Telnet):
                     break
         return buf
 
-    def status(self, name):
-        logger.info(f'Getting status of {name} media object')
-        self.write_line(f'show {name}')
+    def is_playing(self):
+        logger.info(f'Querying player state')
+        self.write_line(f'is_playing')
         lines = self.read_until_line(PROMPT)
-        result = dict()
-        lastlvl = -1
-        stack = [result]
-        lastkey = None
+        result = None
         for line in lines.splitlines():
-            lvl = (len(line) - len(line.lstrip())) // 4
-            # this fails for sub data, should replace with RE ~ /$       [a-z]/
-            if lvl <= 1:
-                continue
-            if lvl > lastlvl and not isinstance(lastkey, type(None)):
-                if not isinstance(stack[-1][lastkey], type(None)):
-                    raise RuntimeError('The status parser does not expect sub-levels '
-                                       'to items with data (or a colon)')
-                stack[-1][lastkey] = dict()
-                stack.append(stack[-1][lastkey])
-            if lvl < lastlvl:
-                stack.pop()
-            key = line.split(':')[0].strip()
-            if ':' in line:
-                stack[-1][key] = ':'.join(line.split(':')[1:]).strip()
-            else:
-                stack[-1][key] = None
-            lastlvl = lvl
-            lastkey = key
+            if line.strip() == '0':
+                result = False
+                break
+            elif line.strip() == '1':
+                result = True
+                break
+        if isinstance(result, type(None)):
+            raise RuntimeError(f'Failed to parse playing status in command response: "{lines}"')
         return result
 
-    def is_playing(self, name):
-        s = self.status(name)
-        try:
-            ans = s['instances']['instance']['state'] == 'playing'
-        except TypeError:
-            ans = False
-        return ans
+    def playlist(self):
+        logger.info(f'Querying playerlist')
+        self.write_line(f'playlist')
+        lines = self.read_until_line(PROMPT)
+        result = list()
+        state = "unknown"
+        for line in lines.splitlines():
+            # I am sure this is very brittle
+            if line.startswith('+----[ Playlist - playlist ]') and state == 'unknown':
+                state = 'begin'
+            elif line.startswith('| 1 - Playlist') and state == 'begin':
+                state = 'playlist'
+            elif line.startswith("|  ") and state == 'playlist':
+                d = playlist_re.search(line).groupdict()
+                d['playing'] = d['playing'] == '*'
+                result.append(d)
+            elif line.startswith('| 2 - Media Library') and state == 'playlist':
+                state = 'finished'
+                break
+            elif line.startswith(PROMPT):
+                raise RuntimeError(f'Failed to parse playlist command response "{lines}"')
+        return result
+    
+    def delete(self, id_):
+        self.write_line(f'delete {id_:n}')
+        return
+    
+    def left_to_play(self):
+        p = self.playlist()
+        result = 0
+        currentlyplaying = False
+        for item in p:
+            if isinstance(item['played'], str) and not item['playing']:
+                self.delete(item['n'])
+            elif item['playing']:
+                currentlyplaying = True
+            elif currentlyplaying:
+                result += 1
+        logger.info(f'{result:d} tracks in queue and unplayed')
+        return result
 
-    def left_to_play(self, name=NAME):
-        s = self.status(name)
-        if isinstance(s['inputs'], type(None)):
-            playlistlength = 0
-        else:
-            playlistlength = len(s['inputs'])
-        try:
-            playlistindex = int(s['instances']['instance']['playlistindex'])
-        except TypeError:
-            playlistindex = 0
-        ans = playlistlength - playlistindex
-        logger.info(f'{ans:d} tracks in {name} queue and unplayed')
-        return ans 
-
-    def add_videos_if_queue_short(self, minqueuelen, name=NAME, showsdir=SHOWS_DIR):
-        if self.left_to_play(name) < minqueuelen:
+    def add_videos_if_queue_short(self, minqueuelen, showsdir=SHOWS_DIR):
+        if self.left_to_play() < minqueuelen:
             videopath = get_random_show(showsdir)
             logger.info(f'Adding "{videopath}" to {name} queue')
-            self.write_line(f'setup {name} input "file://{videopath}"')
+            # TODO: we may need to quote some characters in the videopath
+            self.write_line(f'enqueue file://{videopath}')
             self.read_until_line(PROMPT, timeout=TELNET_TIMEOUT_SEC)
         return
 
-    def play(self, name=NAME):
-        if not self.is_playing(name):
-            self.write_line(f'control {name} play')
-            logger.info(f'Playing {name} media')
+    def play(self):
+        if not self.is_playing():
+            self.write_line(f'play')
+            logger.info(f'Playing')
             self.read_until_line(PROMPT, timeout=TELNET_TIMEOUT_SEC)
         return
 
