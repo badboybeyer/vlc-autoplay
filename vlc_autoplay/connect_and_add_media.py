@@ -56,7 +56,7 @@ def main():
         raise RuntimeError(msg.format(args.verbose))
     initLogger(logger, args.logfile, verbosity)
     connect_and_play(host=args.host, port=args.port, password=args.password,
-                     showsdir=args.dump)
+                     showsdir=args.dump, minqueue=args.min)
     return
 
 

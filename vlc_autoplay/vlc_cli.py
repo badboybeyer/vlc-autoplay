@@ -119,6 +119,8 @@ class VLCCLI(telnetlib.Telnet):
                 currentlyplaying = True
             elif currentlyplaying:
                 result += 1
+        if not currentlyplaying:
+            result = len(p)
         logger.info(f'{result:d} tracks in queue and unplayed')
         return result
 
