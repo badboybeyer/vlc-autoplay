@@ -6,6 +6,7 @@ The class contains helper functions to extend the telnetlib functionality.
 
 from .constants import MY_NAME, DEBUG
 import logging
+import re
 
 # tuning params
 TELNET_LINE_POLL_INTERVAL_SEC = 0.01
