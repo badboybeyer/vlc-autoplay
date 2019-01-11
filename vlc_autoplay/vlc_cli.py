@@ -4,15 +4,17 @@ The vlc-cli class represents a telnet connection to the VLC console.
 The class contains helper functions to extend the telnetlib functionality.
 """
 
-from .constants import MY_NAME, DEBUG
+from time import time
 import logging
 import re
+import telnetlib
+from .constants import MY_NAME, DEBUG, TELNET_TIMEOUT_SEC, PROMPT
+from .selector import get_random_show
 
 # tuning params
 TELNET_LINE_POLL_INTERVAL_SEC = 0.01
 
 # thinks i think i know about the console interface
-PROMPT = '> '
 # TODO: validate character encoding of console interface
 ENCODING = 'utf8'
 # TODO - parse login header
@@ -20,9 +22,13 @@ LOGIN_HEADER_EXAMPLE = 'VLC media player 3.0.5 Vetinari\n'
 
 logger = logging.getLogger(MY_NAME)
 
-playlist_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - (?P<title>.+) \((?P<duration>[0-9]{2}:[0-9]{2}:[0-9]{2})\)($| \[played (?P<played>[0-9]+) times?\]$)')
+playlist_re = re.compile(r'^\|  (?P<playing>[* ])(?P<n>[0-9]+) - (?P<title>.+)'
+                         r' \((?P<duration>[0-9]{2}:[0-9]{2}:[0-9]{2})\)'
+                         r'($| \[played (?P<played>[0-9]+) times?\]$)')
+
 
 class VLCCLI(telnetlib.Telnet):
+    # TODO: force the prompt using set prompt
     def write_line(self, line):
         if DEBUG:
             logger.debug(f"out: '{line}'")
@@ -61,7 +67,8 @@ class VLCCLI(telnetlib.Telnet):
                 result = True
                 break
         if isinstance(result, type(None)):
-            raise RuntimeError(f'Failed to parse playing status in command response: "{lines}"')
+            raise RuntimeError(f'Failed to parse playing status in command '
+                               f'response: "{lines}"')
         return result
 
     def playlist(self):
@@ -71,26 +78,29 @@ class VLCCLI(telnetlib.Telnet):
         result = list()
         state = "unknown"
         for line in lines.splitlines():
+            def line_state(begin, desired):
+                return line.startswith(begin) and state == desired
             # I am sure this is very brittle
-            if line.startswith('+----[ Playlist - playlist ]') and state == 'unknown':
+            if line_state('+----[ Playlist - playlist ]', 'unknown'):
                 state = 'begin'
-            elif line.startswith('| 1 - Playlist') and state == 'begin':
+            elif line_state('| 1 - Playlist', 'begin'):
                 state = 'playlist'
-            elif line.startswith("|  ") and state == 'playlist':
+            elif line_state("|  ", 'playlist'):
                 d = playlist_re.search(line).groupdict()
                 d['playing'] = d['playing'] == '*'
                 result.append(d)
-            elif line.startswith('| 2 - Media Library') and state == 'playlist':
+            elif line_state('| 2 - Media Library', 'playlist'):
                 state = 'finished'
                 break
             elif line.startswith(PROMPT):
-                raise RuntimeError(f'Failed to parse playlist command response "{lines}"')
+                raise RuntimeError(f'Failed to parse playlist command response'
+                                   f' "{lines}"')
         return result
-    
+
     def delete(self, id_):
         self.write_line(f'delete {id_:n}')
         return
-    
+
     def left_to_play(self):
         p = self.playlist()
         result = 0
@@ -105,10 +115,10 @@ class VLCCLI(telnetlib.Telnet):
         logger.info(f'{result:d} tracks in queue and unplayed')
         return result
 
-    def add_videos_if_queue_short(self, minqueuelen, showsdir=SHOWS_DIR):
+    def add_videos_if_queue_short(self, minqueuelen, showsdir):
         if self.left_to_play() < minqueuelen:
             videopath = get_random_show(showsdir)
-            logger.info(f'Adding "{videopath}" to {name} queue')
+            logger.info(f'Adding "{videopath}" queue')
             # TODO: we may need to quote some characters in the videopath
             self.write_line(f'enqueue file://{videopath}')
             self.read_until_line(PROMPT, timeout=TELNET_TIMEOUT_SEC)
