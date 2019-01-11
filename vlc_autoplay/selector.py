@@ -18,19 +18,19 @@ def get_random_media(mediadir, mediatypes=ALL_MEDIA):
     mediapaths = list()
     for entry in os.scandir(mediadir):
         if entry.is_dir():
-            mediapaths.append(entry.path)
+            mediapaths.append(entry)
         elif entry.is_file():
             class_ = magic.from_file(entry.path, mime=True).split('/')[0]
             if class_ in mediatypes:
-                mediapaths.append(entry.path)
+                mediapaths.append(entry)
     if not len(mediapaths):
         raise RuntimeError(f'Could not find any media in "{mediadir}"')
     fails = 0
     while fails < MAX_DESCENT_FAILURES:
         result = random.choice(mediapaths)
-        if os.is_dir(result):
+        if result.is_dir:
             try:
-                result = get_random_media(result)
+                result = get_random_media(result.path)
             except RuntimeError:
                 fails += 1
                 result = None
@@ -39,4 +39,4 @@ def get_random_media(mediadir, mediatypes=ALL_MEDIA):
     if isinstance(result, type(None)):
         raise RuntimeError(f'Exceded max retries why searching for media in '
                            f'subdirs of "{mediadir}"')
-    return result
+    return result.path
