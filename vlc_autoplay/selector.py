@@ -34,6 +34,8 @@ def get_random_media(mediadir, mediatypes=ALL_MEDIA):
             except RuntimeError:
                 fails += 1
                 result = None
+            else:
+                break
         else:
             break
     if isinstance(result, type(None)):
