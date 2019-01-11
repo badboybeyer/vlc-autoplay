@@ -9,23 +9,34 @@ import magic
 from .constants import MY_NAME
 
 logger = logging.getLogger(MY_NAME)
+MAX_DESCENT_FAILURES = 5
+ALL_MEDIA = ('video', 'image', 'audio')
 
 
-def get_random_media(mediadir):
+def get_random_media(mediadir, mediatypes=ALL_MEDIA):
     logger.info(f'Finding a random media file in "{mediadir}"')
-    showpaths = [os.path.join(mediadir, d) for d in os.listdir(mediadir)
-                 if os.path.isdir(os.path.join(mediadir, d))]
-    showpath = random.choice(showpaths)
-    logger.info(f'Finding a random media file in "{showpath}"')
     mediapaths = list()
-    for dirpath, dirnames, filenames in os.walk(showpath):
-        for fn in filenames:
-            filepath = os.path.join(dirpath, fn)
-            class_ = magic.from_file(filepath, mime=True).split('/')[0]
-            if class_ in ('video', 'image', 'audio'):
-                mediapaths.append(filepath)
-    if len(mediapaths):
+    for entry in os.scandir(mediadir):
+        if entry.is_dir():
+            mediapaths.append(entry.path)
+        elif entry.is_file():
+            class_ = magic.from_file(entry.path, mime=True).split('/')[0]
+            if class_ in mediatypes:
+                mediapaths.append(entry.path)
+    if not len(mediapaths):
+        raise RuntimeError(f'Could not find any media in "{mediadir}"')
+    fails = 0
+    while fails < MAX_DESCENT_FAILURES:
         result = random.choice(mediapaths)
-    else:
-        result = random.choice(mediadir)
+        if os.is_dir(result):
+            try:
+                result = get_random_media(result)
+            except RuntimeError:
+                fails += 1
+                result = None
+        else:
+            break
+    if isinstance(result, type(None)):
+        raise RuntimeError(f'Exceded max retries why searching for media in '
+                           f'subdirs of "{mediadir}"')
     return result
