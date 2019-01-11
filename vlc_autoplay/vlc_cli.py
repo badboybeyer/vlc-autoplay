@@ -98,7 +98,7 @@ class VLCCLI(telnetlib.Telnet):
         return result
 
     def delete(self, id_):
-        self.write_line(f'delete {id_:n}')
+        self.write_line(f'delete {id_:d}')
         return
 
     def left_to_play(self):
