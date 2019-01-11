@@ -90,7 +90,7 @@ class VLCCLI(telnetlib.Telnet):
                 if isinstance(match, type(None)):
                     raise RuntimeError(f'Failed to parse playlist entry: '
                                        f'"{line.strip()}"')
-                d = match.groupdict()n
+                d = match.groupdict()
                 match = end_re.search(line.strip())
                 if isinstance(match, type(None)):
                     d['duration'] =  None
