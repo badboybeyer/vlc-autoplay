@@ -24,4 +24,8 @@ def get_random_media(mediadir):
             class_ = magic.from_file(filepath, mime=True).split('/')[0]
             if class_ in ('video', 'image', 'audio'):
                 mediapaths.append(filepath)
-    return random.choice(mediapaths)
+    if len(mediapaths):
+        result = random.choice(mediapaths)
+    else:
+        result = random.choice(mediadir)
+    return result
