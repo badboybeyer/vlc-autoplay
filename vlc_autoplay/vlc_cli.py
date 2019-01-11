@@ -105,6 +105,7 @@ class VLCCLI(telnetlib.Telnet):
         return result
 
     def delete(self, id_):
+        logger.info(f'deleteing file id {int(id_):d} from queue')
         self.write_line(f'delete {int(id_):d}')
         return
 
