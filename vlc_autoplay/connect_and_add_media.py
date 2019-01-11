@@ -19,7 +19,7 @@ CONSOLE_PASSWD = 'admin'
 SHOWS_DIR = os.path.join(Path.home(), 'Videos')
 
 # tuning params
-TOO_FEW_MEDIAS_IN_QUEUE = 2
+TOO_FEW_MEDIAS_IN_QUEUE = 10
 
 logger = logging.getLogger(MY_NAME)
 
